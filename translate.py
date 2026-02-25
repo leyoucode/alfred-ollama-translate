@@ -17,6 +17,13 @@ logging.basicConfig(filename=log_path, level=logging.DEBUG,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
+def detect_language(text):
+    """If text contains any CJK characters, translate to English; else to Chinese."""
+    if re.search(r'[\u4e00-\u9fff\u3400-\u4dbf]', text):
+        return 'en'
+    return 'cn'
+
+
 def parse_sentence_pairs(text):
     """Parse model response as JSON sentence pairs. Returns list or None."""
     # Try direct parse
@@ -179,10 +186,8 @@ def translate(text, direction):
 def main():
     logging.debug("argv: %s", sys.argv)
 
-    # First argument: direction (en = translate to English, cn = translate to Chinese)
-    direction = sys.argv[1] if len(sys.argv) > 1 else "en"
+    direction = sys.argv[1] if len(sys.argv) > 1 else "auto"
 
-    # Read query: from remaining args (CLI testing) or stdin (Alfred scriptargtype=1)
     if len(sys.argv) > 2:
         query = " ".join(sys.argv[2:])
     elif not sys.stdin.isatty():
@@ -191,6 +196,35 @@ def main():
         query = ""
 
     logging.debug("direction: %s, query: %s", direction, query)
+
+    # Empty query: show direction picker (List Filter UX via autocomplete)
+    if not query:
+        print(json.dumps({"items": [
+            {
+                "title": "中译英",
+                "subtitle": "按 Tab 选择，然后输入中文",
+                "arg": "", "valid": False,
+                "autocomplete": "en: "
+            },
+            {
+                "title": "英译中",
+                "subtitle": "按 Tab 选择，然后输入英文",
+                "arg": "", "valid": False,
+                "autocomplete": "cn: "
+            }
+        ]}))
+        return
+
+    # Handle direction prefix (set by autocomplete) or auto-detect
+    if direction == "auto":
+        if query.startswith("en: "):
+            direction = "en"
+            query = query[4:]
+        elif query.startswith("cn: "):
+            direction = "cn"
+            query = query[4:]
+        else:
+            direction = detect_language(query)
 
     if not query:
         alfred_output("输入要翻译的文字", subtitle="中英互译 (Ollama)", valid=False)

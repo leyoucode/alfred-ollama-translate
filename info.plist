@@ -8,20 +8,7 @@
 	<string>Tools</string>
 	<key>connections</key>
 	<dict>
-		<key>D1E2F3A4-B5C6-7890-D1E2-F3A4B5C67890</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>E2F3A4B5-C6D7-8901-E2F3-A4B5C6D78901</key>
+		<key>C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
@@ -53,7 +40,7 @@
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>0</integer>
 				<key>argumenttreatemptyqueryasnil</key>
-				<false/>
+				<true/>
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
@@ -61,7 +48,7 @@
 				<key>escaping</key>
 				<integer>68</integer>
 				<key>keyword</key>
-				<string>ten</string>
+				<string>t</string>
 				<key>queuedelaycustom</key>
 				<integer>3</integer>
 				<key>queuedelayimmediatelyinitially</key>
@@ -71,17 +58,17 @@
 				<key>queuemode</key>
 				<integer>2</integer>
 				<key>runningsubtext</key>
-				<string>正在翻译为英文...</string>
+				<string>正在翻译...</string>
 				<key>script</key>
-				<string>/usr/bin/python3 translate.py en {query}</string>
+				<string>/usr/bin/python3 translate.py auto {query}</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>中→英 翻译 (Ollama)</string>
+				<string>中英互译，自动检测语言 (Ollama)</string>
 				<key>title</key>
-				<string>翻译为英文</string>
+				<string>翻译</string>
 				<key>type</key>
 				<integer>5</integer>
 				<key>withspace</key>
@@ -90,7 +77,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>D1E2F3A4-B5C6-7890-D1E2-F3A4B5C67890</string>
+			<string>C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -113,55 +100,6 @@
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<false/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>0</integer>
-				<key>escaping</key>
-				<integer>68</integer>
-				<key>keyword</key>
-				<string>tcn</string>
-				<key>queuedelaycustom</key>
-				<integer>3</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<false/>
-				<key>queuedelaymode</key>
-				<integer>2</integer>
-				<key>queuemode</key>
-				<integer>2</integer>
-				<key>runningsubtext</key>
-				<string>正在翻译为中文...</string>
-				<key>script</key>
-				<string>/usr/bin/python3 translate.py cn {query}</string>
-				<key>scriptargtype</key>
-				<integer>0</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>英→中 翻译 (Ollama)</string>
-				<key>title</key>
-				<string>翻译为中文</string>
-				<key>type</key>
-				<integer>5</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>E2F3A4B5-C6D7-8901-E2F3-A4B5C6D78901</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
 	</array>
 	<key>readme</key>
 	<string></string>
@@ -170,23 +108,16 @@
 		<key>B2C3D4E5-F6A7-8901-BCDE-F12345678901</key>
 		<dict>
 			<key>xpos</key>
-			<real>475</real>
+			<real>700</real>
 			<key>ypos</key>
-			<real>175</real>
+			<real>105</real>
 		</dict>
-		<key>D1E2F3A4-B5C6-7890-D1E2-F3A4B5C67890</key>
+		<key>C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012</key>
 		<dict>
 			<key>xpos</key>
-			<real>150</real>
+			<real>155</real>
 			<key>ypos</key>
-			<real>100</real>
-		</dict>
-		<key>E2F3A4B5-C6D7-8901-E2F3-A4B5C6D78901</key>
-		<dict>
-			<key>xpos</key>
-			<real>150</real>
-			<key>ypos</key>
-			<real>275</real>
+			<real>105</real>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
