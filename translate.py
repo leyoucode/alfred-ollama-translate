@@ -4,6 +4,7 @@ import json
 import sys
 import os
 import logging
+import html
 import urllib.request
 import urllib.error
 
@@ -15,9 +16,68 @@ logging.basicConfig(filename=log_path, level=logging.DEBUG,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
-def alfred_output(title, subtitle="", arg="", valid=True):
-    items = [{"title": title, "subtitle": subtitle, "arg": arg, "valid": valid}]
-    print(json.dumps({"items": items}))
+def generate_preview_html(original, translation, direction):
+    if direction == "en":
+        left_label, right_label = "中文原文", "English Translation"
+    else:
+        left_label, right_label = "English Original", "中文译文"
+
+    safe_original = html.escape(original)
+    safe_translation = html.escape(translation)
+
+    content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0; padding: 20px;
+    background: #fff; color: #222;
+  }}
+  @media (prefers-color-scheme: dark) {{
+    body {{ background: #1e1e1e; color: #ddd; }}
+    .panel {{ background: #2a2a2a; border-color: #444; }}
+  }}
+  .container {{ display: flex; gap: 20px; }}
+  .panel {{
+    flex: 1; padding: 16px; border: 1px solid #ddd;
+    border-radius: 8px; background: #f9f9f9;
+  }}
+  .label {{
+    font-size: 12px; font-weight: 600; color: #888;
+    text-transform: uppercase; margin-bottom: 8px;
+  }}
+  .text {{ font-size: 16px; line-height: 1.6; white-space: pre-wrap; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="panel">
+    <div class="label">{left_label}</div>
+    <div class="text">{safe_original}</div>
+  </div>
+  <div class="panel">
+    <div class="label">{right_label}</div>
+    <div class="text">{safe_translation}</div>
+  </div>
+</div>
+</body>
+</html>"""
+
+    path = "/tmp/alfred_ollama_translate.html"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    return path
+
+
+def alfred_output(title, subtitle="", arg="", valid=True, quicklookurl=None):
+    item = {"title": title, "subtitle": subtitle, "arg": arg, "valid": valid}
+    if quicklookurl:
+        item["quicklookurl"] = quicklookurl
+    if arg:
+        item["text"] = {"largetype": arg}
+    print(json.dumps({"items": [item]}))
 
 
 def translate(text, direction):
@@ -67,7 +127,9 @@ def main():
     try:
         result = translate(query, direction)
         subtitle = "中→英" if direction == "en" else "英→中"
-        alfred_output(result, subtitle=subtitle, arg=result)
+        preview = generate_preview_html(query, result, direction)
+        alfred_output(result, subtitle=f"{subtitle} | Shift 查看对照",
+                      arg=result, quicklookurl=preview)
     except urllib.error.URLError:
         alfred_output("无法连接 Ollama", subtitle="请确保 Ollama 正在运行", valid=False)
     except TimeoutError:
