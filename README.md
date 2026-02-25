@@ -11,6 +11,8 @@
 
 输入后稍等片刻，翻译结果会显示在 Alfred 中。按回车即可复制到剪贴板。
 
+按 **Shift** 可打开 QuickLook 预览，左右对照显示原文与译文。多句文本会自动拆分为逐句对照，点击任一句即可高亮两侧对应的句对。
+
 ## 前置要求
 
 1. [Alfred](https://www.alfredapp.com/) + Powerpack

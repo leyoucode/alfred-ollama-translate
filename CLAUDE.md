@@ -16,6 +16,8 @@ Both feed into a single Copy to Clipboard output node.
 
 `translate.py` is the sole source file. It calls Ollama's chat API (`http://localhost:11434/api/chat`) with the `qwen2:7b` model, streaming disabled, 30s timeout. Output is Alfred JSON format (`{"items": [...]}`).
 
+The prompt asks the model to return a JSON array of sentence pairs (`[{"src": "...", "tgt": "..."}]`). `parse_sentence_pairs()` parses the response (with regex fallback), and `generate_preview_html()` generates a QuickLook HTML file at `/tmp/alfred_ollama_translate.html` with paired `<span>` elements for click-to-highlight sentence alignment. If the model doesn't return valid JSON, it falls back to plain text display without highlighting.
+
 ## Running and Testing
 
 Prerequisites: Ollama running locally with `qwen2:7b` model pulled.
