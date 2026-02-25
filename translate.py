@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import json
+import re
 import sys
 import os
 import logging
@@ -16,14 +17,69 @@ logging.basicConfig(filename=log_path, level=logging.DEBUG,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
-def generate_preview_html(original, translation, direction):
+def parse_sentence_pairs(text):
+    """Parse model response as JSON sentence pairs. Returns list or None."""
+    # Try direct parse
+    try:
+        pairs = json.loads(text)
+        if isinstance(pairs, list) and pairs and "src" in pairs[0] and "tgt" in pairs[0]:
+            return pairs
+    except (json.JSONDecodeError, TypeError, KeyError):
+        pass
+    # Try extracting JSON array from surrounding text
+    m = re.search(r'\[.*\]', text, re.DOTALL)
+    if m:
+        try:
+            pairs = json.loads(m.group())
+            if isinstance(pairs, list) and pairs and "src" in pairs[0] and "tgt" in pairs[0]:
+                return pairs
+        except (json.JSONDecodeError, TypeError, KeyError):
+            pass
+    return None
+
+
+def generate_preview_html(pairs, direction, original=None, translation=None):
     if direction == "en":
         left_label, right_label = "中文原文", "English Translation"
     else:
         left_label, right_label = "English Original", "中文译文"
 
-    safe_original = html.escape(original)
-    safe_translation = html.escape(translation)
+    if pairs:
+        left_parts = []
+        right_parts = []
+        for i, p in enumerate(pairs):
+            left_parts.append(f'<span class="s" data-i="{i}">{html.escape(p["src"])}</span>')
+            right_parts.append(f'<span class="s" data-i="{i}">{html.escape(p["tgt"])}</span>')
+        left_html = " ".join(left_parts)
+        right_html = " ".join(right_parts)
+    else:
+        left_html = html.escape(original or "")
+        right_html = html.escape(translation or "")
+
+    highlight_css = ""
+    highlight_js = ""
+    if pairs:
+        highlight_css = (
+            "  .s { cursor: pointer; border-radius: 3px; padding: 1px 0; transition: background 0.15s; }\n"
+            "  .s.active { background: rgba(255, 196, 0, 0.3); }\n"
+        )
+        highlight_js = """
+<script>
+(function() {
+  function clearAll() {
+    document.querySelectorAll('.s.active').forEach(function(el) { el.classList.remove('active'); });
+  }
+  document.querySelectorAll('.s').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.stopPropagation();
+      clearAll();
+      var idx = this.dataset.i;
+      document.querySelectorAll('.s[data-i="' + idx + '"]').forEach(function(s) { s.classList.add('active'); });
+    });
+  });
+  document.addEventListener('click', clearAll);
+})();
+</script>"""
 
     content = f"""<!DOCTYPE html>
 <html>
@@ -38,6 +94,7 @@ def generate_preview_html(original, translation, direction):
   @media (prefers-color-scheme: dark) {{
     body {{ background: #1e1e1e; color: #ddd; }}
     .panel {{ background: #2a2a2a; border-color: #444; }}
+    .s.active {{ background: rgba(255, 196, 0, 0.2); }}
   }}
   .container {{ display: flex; gap: 20px; }}
   .panel {{
@@ -49,19 +106,20 @@ def generate_preview_html(original, translation, direction):
     text-transform: uppercase; margin-bottom: 8px;
   }}
   .text {{ font-size: 16px; line-height: 1.6; white-space: pre-wrap; }}
-</style>
+{highlight_css}</style>
 </head>
 <body>
 <div class="container">
-  <div class="panel">
+  <div class="panel" id="left">
     <div class="label">{left_label}</div>
-    <div class="text">{safe_original}</div>
+    <div class="text">{left_html}</div>
   </div>
-  <div class="panel">
+  <div class="panel" id="right">
     <div class="label">{right_label}</div>
-    <div class="text">{safe_translation}</div>
+    <div class="text">{right_html}</div>
   </div>
 </div>
+{highlight_js}
 </body>
 </html>"""
 
@@ -82,9 +140,21 @@ def alfred_output(title, subtitle="", arg="", valid=True, quicklookurl=None):
 
 def translate(text, direction):
     if direction == "en":
-        prompt = "You are a translator. Translate the following Chinese text into English. Output ONLY the translation, no explanations or extra text."
+        prompt = (
+            "Translate the following Chinese text into English.\n"
+            "Split the text into individual sentences. Return a JSON array where each element is one sentence pair: {\"src\": \"original sentence\", \"tgt\": \"translated sentence\"}.\n"
+            "Each sentence must be a SEPARATE element. Output ONLY valid JSON, no markdown fences, no explanations.\n"
+            'Example input: "你好世界。今天天气不错。"\n'
+            'Example output: [{"src": "你好世界。", "tgt": "Hello world."}, {"src": "今天天气不错。", "tgt": "The weather is nice today."}]'
+        )
     else:
-        prompt = "You are a translator. Translate the following English text into Chinese. Output ONLY the translation, no explanations or extra text."
+        prompt = (
+            "Translate the following English text into Chinese.\n"
+            "Split the text into individual sentences. Return a JSON array where each element is one sentence pair: {\"src\": \"original sentence\", \"tgt\": \"translated sentence\"}.\n"
+            "Each sentence must be a SEPARATE element. Output ONLY valid JSON, no markdown fences, no explanations.\n"
+            'Example input: "Hello world. Nice weather today."\n'
+            'Example output: [{"src": "Hello world.", "tgt": "你好世界。"}, {"src": "Nice weather today.", "tgt": "今天天气不错。"}]'
+        )
 
     payload = {
         "model": MODEL,
@@ -101,7 +171,9 @@ def translate(text, direction):
     with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read().decode("utf-8"))
 
-    return result["message"]["content"].strip()
+    content = result["message"]["content"].strip()
+    logging.debug("model response: %s", content)
+    return content
 
 
 def main():
@@ -126,10 +198,16 @@ def main():
 
     try:
         result = translate(query, direction)
+        pairs = parse_sentence_pairs(result)
+        if pairs:
+            translation = " ".join(p["tgt"] for p in pairs)
+            preview = generate_preview_html(pairs, direction)
+        else:
+            translation = result
+            preview = generate_preview_html(None, direction, query, translation)
         subtitle = "中→英" if direction == "en" else "英→中"
-        preview = generate_preview_html(query, result, direction)
-        alfred_output(result, subtitle=f"{subtitle} | Shift 查看对照",
-                      arg=result, quicklookurl=preview)
+        alfred_output(translation, subtitle=f"{subtitle} | Shift 查看对照",
+                      arg=translation, quicklookurl=preview)
     except urllib.error.URLError:
         alfred_output("无法连接 Ollama", subtitle="请确保 Ollama 正在运行", valid=False)
     except TimeoutError:
