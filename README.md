@@ -1,6 +1,6 @@
 # Ollama 翻译 — Alfred Workflow
 
-基于 Ollama 本地大模型的中英互译 Alfred Workflow。翻译完全在本机运行，无需联网，保护隐私。
+基于 Ollama 本地大模型的中英互译 Alfred Workflow，使用腾讯混元 HY-MT1.5-7B 翻译模型（WMT25 机器翻译冠军升级版）。翻译完全在本机运行，无需联网，保护隐私。
 
 ## 使用方法
 
@@ -11,7 +11,8 @@
 
 输入后稍等片刻，翻译结果会显示在 Alfred 中。按回车即可复制到剪贴板。
 
-按 **Shift** 可打开 QuickLook 预览，左右对照显示原文与译文。多句文本会自动拆分为逐句对照，点击任一句即可高亮两侧对应的句对。
+- 按 **Shift** 可打开 QuickLook 预览，左右对照显示原文与译文。多句文本会自动拆分为逐句对照，点击任一句即可高亮两侧对应的句对。
+- 按 **⌘↩** 可朗读翻译结果（中文用 Tingting 语音，英文用 Samantha 语音）。
 
 ## 前置要求
 
@@ -20,7 +21,7 @@
 3. 拉取翻译模型：
 
 ```bash
-ollama pull qwen2:7b
+ollama pull demonbyron/HY-MT1.5-7B
 ```
 
 ## 安装
@@ -33,7 +34,7 @@ ollama pull qwen2:7b
 
 ```python
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen2:7b"
+MODEL = "demonbyron/HY-MT1.5-7B"
 ```
 
 ## 常见问题
@@ -42,7 +43,7 @@ MODEL = "qwen2:7b"
 确认 Ollama 已启动：`ollama serve`，默认监听 `localhost:11434`。
 
 **提示「翻译超时」**
-默认超时 30 秒。首次调用模型可能需要加载，请重试一次。也可考虑换用更小的模型以加快响应。
+默认超时 60 秒。首次调用模型可能需要加载，请重试一次。也可考虑换用更小的模型（如 `demonbyron/HY-MT1.5-1.8B`）以加快响应。
 
 ## License
 

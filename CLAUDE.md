@@ -14,13 +14,13 @@ The workflow has two entry points configured in `info.plist`:
 
 Both feed into a single Copy to Clipboard output node.
 
-`translate.py` is the sole source file. It calls Ollama's chat API (`http://localhost:11434/api/chat`) with the `qwen2:7b` model, streaming disabled, 30s timeout. Output is Alfred JSON format (`{"items": [...]}`).
+`translate.py` is the sole source file. It calls Ollama's chat API (`http://localhost:11434/api/chat`) with the `demonbyron/HY-MT1.5-7B` model (Tencent Hunyuan MT, WMT25 champion upgrade), streaming disabled, 60s timeout. Output is Alfred JSON format (`{"items": [...]}`).
 
-The prompt asks the model to return a JSON array of sentence pairs (`[{"src": "...", "tgt": "..."}]`). `parse_sentence_pairs()` parses the response (with regex fallback), and `generate_preview_html()` generates a QuickLook HTML file at `/tmp/alfred_ollama_translate.html` with paired `<span>` elements for click-to-highlight sentence alignment. If the model doesn't return valid JSON, it falls back to plain text display without highlighting.
+The prompt uses HY-MT's recommended format: `Translate the following segment into <language>, without additional explanation.` Since HY-MT is a dedicated translation model (not a general chatbot), it returns plain translated text. `split_sentences()` splits both source and translation by punctuation, and `build_sentence_pairs()` pairs them if sentence counts match. `generate_preview_html()` generates a QuickLook HTML file at `/tmp/alfred_ollama_translate.html` with paired `<span>` elements for click-to-highlight sentence alignment. If sentence counts don't match, it falls back to plain text display without highlighting.
 
 ## Running and Testing
 
-Prerequisites: Ollama running locally with `qwen2:7b` model pulled.
+Prerequisites: Ollama running locally with `demonbyron/HY-MT1.5-7B` model pulled.
 
 ```bash
 # Test from command line
