@@ -10,7 +10,7 @@ import urllib.request
 import urllib.error
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "qwen2:7b"
+MODEL = "demonbyron/HY-MT1.5-7B"
 
 log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
 logging.basicConfig(filename=log_path, level=logging.DEBUG,
@@ -24,24 +24,26 @@ def detect_language(text):
     return 'cn'
 
 
-def parse_sentence_pairs(text):
-    """Parse model response as JSON sentence pairs. Returns list or None."""
-    # Try direct parse
-    try:
-        pairs = json.loads(text)
-        if isinstance(pairs, list) and pairs and "src" in pairs[0] and "tgt" in pairs[0]:
-            return pairs
-    except (json.JSONDecodeError, TypeError, KeyError):
-        pass
-    # Try extracting JSON array from surrounding text
-    m = re.search(r'\[.*\]', text, re.DOTALL)
-    if m:
-        try:
-            pairs = json.loads(m.group())
-            if isinstance(pairs, list) and pairs and "src" in pairs[0] and "tgt" in pairs[0]:
-                return pairs
-        except (json.JSONDecodeError, TypeError, KeyError):
-            pass
+def split_sentences(text):
+    """Split text into sentences, handling both Chinese and English."""
+    text = text.strip()
+    if not text:
+        return []
+    has_cjk = bool(re.search(r'[\u4e00-\u9fff\u3400-\u4dbf]', text))
+    if has_cjk:
+        parts = re.split(r'(?<=[。！？])', text)
+    else:
+        parts = re.split(r'(?<=[.!?])\s+', text)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def build_sentence_pairs(source, translation):
+    """Build sentence pairs by splitting source and translation into sentences.
+    Returns list of pairs if counts match, else None."""
+    src_sents = split_sentences(source)
+    tgt_sents = split_sentences(translation)
+    if len(src_sents) == len(tgt_sents) and len(src_sents) > 1:
+        return [{"src": s, "tgt": t} for s, t in zip(src_sents, tgt_sents)]
     return None
 
 
@@ -136,38 +138,27 @@ def generate_preview_html(pairs, direction, original=None, translation=None):
     return path
 
 
-def alfred_output(title, subtitle="", arg="", valid=True, quicklookurl=None):
+def alfred_output(title, subtitle="", arg="", valid=True, quicklookurl=None, mods=None):
     item = {"title": title, "subtitle": subtitle, "arg": arg, "valid": valid}
     if quicklookurl:
         item["quicklookurl"] = quicklookurl
     if arg:
         item["text"] = {"largetype": arg}
+    if mods:
+        item["mods"] = mods
     print(json.dumps({"items": [item]}))
 
 
 def translate(text, direction):
     if direction == "en":
-        prompt = (
-            "Translate the following Chinese text into English.\n"
-            "Split the text into individual sentences. Return a JSON array where each element is one sentence pair: {\"src\": \"original sentence\", \"tgt\": \"translated sentence\"}.\n"
-            "Each sentence must be a SEPARATE element. Output ONLY valid JSON, no markdown fences, no explanations.\n"
-            'Example input: "你好世界。今天天气不错。"\n'
-            'Example output: [{"src": "你好世界。", "tgt": "Hello world."}, {"src": "今天天气不错。", "tgt": "The weather is nice today."}]'
-        )
+        instruction = "Translate the following segment into English, without additional explanation."
     else:
-        prompt = (
-            "Translate the following English text into Chinese.\n"
-            "Split the text into individual sentences. Return a JSON array where each element is one sentence pair: {\"src\": \"original sentence\", \"tgt\": \"translated sentence\"}.\n"
-            "Each sentence must be a SEPARATE element. Output ONLY valid JSON, no markdown fences, no explanations.\n"
-            'Example input: "Hello world. Nice weather today."\n'
-            'Example output: [{"src": "Hello world.", "tgt": "你好世界。"}, {"src": "Nice weather today.", "tgt": "今天天气不错。"}]'
-        )
+        instruction = "Translate the following segment into Chinese, without additional explanation."
 
     payload = {
         "model": MODEL,
         "messages": [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": text}
+            {"role": "user", "content": f"{instruction}\n{text}"}
         ],
         "stream": False
     }
@@ -175,7 +166,9 @@ def translate(text, direction):
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(OLLAMA_URL, data=data, headers={"Content-Type": "application/json"})
 
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    # Bypass proxy for local Ollama requests
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(req, timeout=60) as resp:
         result = json.loads(resp.read().decode("utf-8"))
 
     content = result["message"]["content"].strip()
@@ -232,7 +225,7 @@ def main():
 
     try:
         result = translate(query, direction)
-        pairs = parse_sentence_pairs(result)
+        pairs = build_sentence_pairs(query, result)
         if pairs:
             translation = " ".join(p["tgt"] for p in pairs)
             preview = generate_preview_html(pairs, direction)
@@ -240,8 +233,10 @@ def main():
             translation = result
             preview = generate_preview_html(None, direction, query, translation)
         subtitle = "中→英" if direction == "en" else "英→中"
-        alfred_output(translation, subtitle=f"{subtitle} | Shift 查看对照",
-                      arg=translation, quicklookurl=preview)
+        tts_arg = f"{direction}:{translation}"
+        mods = {"cmd": {"arg": tts_arg, "subtitle": "⌘↩ 朗读", "valid": True}}
+        alfred_output(translation, subtitle=f"{subtitle} | Shift 查看对照 | ⌘↩ 朗读",
+                      arg=translation, quicklookurl=preview, mods=mods)
     except urllib.error.URLError:
         alfred_output("无法连接 Ollama", subtitle="请确保 Ollama 正在运行", valid=False)
     except TimeoutError:
