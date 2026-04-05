@@ -8,19 +8,6 @@
 	<string>Tools</string>
 	<key>connections</key>
 	<dict>
-		<key>D4E5F6A7-B8C9-0123-D4E5-F6A7B8C90123</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012</key>
 		<array>
 			<dict>
@@ -44,6 +31,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>D4E5F6A7-B8C9-0123-D4E5-F6A7B8C90123</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 	</dict>
 	<key>createdby</key>
 	<string>liu wei</string>
@@ -58,6 +58,25 @@
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>autopaste</key>
+				<false/>
+				<key>clipboardtext</key>
+				<string>{query}</string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>transient</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.clipboard</string>
+			<key>uid</key>
+			<string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -69,7 +88,7 @@
 				<key>argumenttype</key>
 				<integer>0</integer>
 				<key>escaping</key>
-				<integer>127</integer>
+				<integer>30</integer>
 				<key>keyword</key>
 				<string>t</string>
 				<key>queuedelaycustom</key>
@@ -83,7 +102,7 @@
 				<key>runningsubtext</key>
 				<string>正在翻译...</string>
 				<key>script</key>
-				<string>/usr/bin/python3 translate.py auto {query}</string>
+				<string>/usr/bin/python3 translate.py auto "{query}"</string>
 				<key>scriptargtype</key>
 				<integer>0</integer>
 				<key>scriptfile</key>
@@ -101,25 +120,6 @@
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89012</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>autopaste</key>
-				<false/>
-				<key>clipboardtext</key>
-				<string>{query}</string>
-				<key>ignoredynamicplaceholders</key>
-				<false/>
-				<key>transient</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.clipboard</string>
-			<key>uid</key>
-			<string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>

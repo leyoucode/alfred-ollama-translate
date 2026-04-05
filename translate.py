@@ -69,8 +69,16 @@ def generate_preview_html(pairs, direction, original=None, translation=None):
     highlight_js = ""
     if pairs:
         highlight_css = (
-            "  .s { cursor: pointer; border-radius: 3px; padding: 1px 0; transition: background 0.15s; }\n"
-            "  .s.active { background: rgba(255, 196, 0, 0.3); }\n"
+            "  .s { cursor: pointer; border-radius: 3px; padding: 1px 2px;"
+            " transition: all .25s cubic-bezier(.4,0,.2,1); }\n"
+            "  .s:hover { background: rgba(255,255,255,.05); }\n"
+            "  .s.active { background: rgba(90,160,255,.22);"
+            " box-shadow: inset 0 -2px 0 rgba(90,160,255,.6); }\n"
+            "  @media (prefers-color-scheme: light) {\n"
+            "    .s:hover { background: rgba(0,0,0,.03); }\n"
+            "    .s.active { background: rgba(0,100,220,.14);"
+            " box-shadow: inset 0 -2px 0 rgba(0,100,220,.45); }\n"
+            "  }\n"
         )
         highlight_js = """
 <script>
@@ -95,35 +103,56 @@ def generate_preview_html(pairs, direction, original=None, translation=None):
 <head>
 <meta charset="utf-8">
 <style>
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    margin: 0; padding: 20px;
-    background: #fff; color: #222;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px;
+    background: #161618; color: rgba(255,255,255,.84);
   }}
-  @media (prefers-color-scheme: dark) {{
-    body {{ background: #1e1e1e; color: #ddd; }}
-    .panel {{ background: #2a2a2a; border-color: #444; }}
-    .s.active {{ background: rgba(255, 196, 0, 0.2); }}
+  .wrap {{
+    background: rgba(255,255,255,.04);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 0 .5px rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.35);
+    display: flex;
   }}
-  .container {{ display: flex; gap: 20px; }}
   .panel {{
-    flex: 1; padding: 16px; border: 1px solid #ddd;
-    border-radius: 8px; background: #f9f9f9;
+    flex: 1; padding: 22px 26px;
+  }}
+  .panel + .panel {{
+    border-left: 1px solid rgba(255,255,255,.06);
   }}
   .label {{
-    font-size: 12px; font-weight: 600; color: #888;
-    text-transform: uppercase; margin-bottom: 8px;
+    font-size: 11px; font-weight: 500; letter-spacing: .6px;
+    color: rgba(255,255,255,.26);
+    text-transform: uppercase; margin-bottom: 14px;
   }}
-  .text {{ font-size: 16px; line-height: 1.6; white-space: pre-wrap; }}
-{highlight_css}</style>
+  .text {{
+    font-size: 15px; line-height: 1.82; white-space: pre-wrap;
+    word-wrap: break-word;
+    color: rgba(255,255,255,.76);
+  }}
+{highlight_css}
+  @media (prefers-color-scheme: light) {{
+    body {{ background: #f5f5f7; color: #1d1d1f; }}
+    .wrap {{
+      background: #fff;
+      box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.06);
+    }}
+    .panel + .panel {{ border-left-color: rgba(0,0,0,.06); }}
+    .label {{ color: rgba(0,0,0,.3); }}
+    .text {{ color: rgba(0,0,0,.78); }}
+  }}
+</style>
 </head>
 <body>
-<div class="container">
-  <div class="panel" id="left">
+<div class="wrap">
+  <div class="panel">
     <div class="label">{left_label}</div>
     <div class="text">{left_html}</div>
   </div>
-  <div class="panel" id="right">
+  <div class="panel">
     <div class="label">{right_label}</div>
     <div class="text">{right_html}</div>
   </div>
