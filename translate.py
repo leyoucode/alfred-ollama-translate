@@ -10,7 +10,7 @@ import urllib.request
 import urllib.error
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-MODEL = "demonbyron/HY-MT1.5-7B"
+MODEL = "gemma4:e4b"
 
 log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug.log")
 logging.basicConfig(filename=log_path, level=logging.DEBUG,
@@ -189,7 +189,9 @@ def translate(text, direction):
         "messages": [
             {"role": "user", "content": f"{instruction}\n{text}"}
         ],
-        "stream": False
+        "stream": False,
+        # fast 模式：关闭支持 thinking 的模型的思考输出。
+        "think": False
     }
 
     data = json.dumps(payload).encode("utf-8")
